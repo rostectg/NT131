@@ -28,8 +28,15 @@ Trong mỗi **table**, các **rule** sẽ được tiếp tục được chia ra
 - `POSTROUTING`: Tương ứng với hook `NF_IP_POST_ROUTING`.
 Nhờ sử dụng các chain này, sysadmin có thể kiểm soát được *khi nào* rule sẽ được áp dụng lên gói tin.
 Như vậy IPTables là giao diện người dùng, cho phép ta có thể *đăng kí* vào các netfilter hook chạy ở kernel, để tương tác với các gói tin đi qua hệ thống.
-# Xây dựng đồ án môn học
 
+
+
+
+# Xây dựng đồ án môn học
+## Build kernel module
+```
+sudo apt install flex bison
+```
 
 # Demo
 
