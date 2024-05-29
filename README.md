@@ -33,10 +33,92 @@ Như vậy IPTables là giao diện người dùng, cho phép ta có thể *đă
 
 
 # Xây dựng đồ án môn học
-## Build kernel module
+## 1. Kernel module
+**Mục tiêu:** Xây dựng một kernel module đơn giản, tương tác với Netfilter để thông qua đó block một vài gói tin.
+
+**Chuẩn bị:**
+Build toolings:
+```bash
+sudo apt install bc binutils bison dwarves flex gcc git gnupg2 gzip libelf-dev libncurses5-dev libssl-dev make openssl pahole perl-base rsync tar xz-utils
 ```
-sudo apt install flex bison
+
+"KBuild" Makefile
+```sh
+obj-m += module_name.o
+PWD := $(CURDIR)
+all:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+clean:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
 ```
+
+
+## 2. Linux kernel
+**Mục tiêu:** Chỉnh sửa trực tiếp source code linux kernel, build lại kernel rồi boot thành công.
+
+**Chuẩn bị:**
+1. Config file:
+```bash
+cp /boot/config-$(uname -r) .config
+make olddefconfig
+```
+%%
+2. Disable module signing
+```bash
+./scripts/config --file .config --disable MODULE_SIG
+./scripts/config --file .config --disable SYSTEM_TRUSTED_KEYS
+./scripts/config --file .config --disable SYSTEM_REVOCATION_KEYS
+```
+%%
+3. Tag tên cho kernel sắp build
+```bash
+./scripts/config --file .config --set-str LOCALVERSION "-custom-nt131"
+```
+
+4. Build kernel
+```bash
+make -j$(nproc) 2>&1 | tee log
+```
+
+5. Cài các module bắt buộc
+```
+sudo make modules_install
+```
+
+7. Cài đặt kernel
+```
+sudo make install
+```
+
+./scripts/config --file .config --set-str LOCALVERSION "-pratham"
+
+---
+Load kernel module
+```
+insmod module_name.ko
+```
+
+Unload kernel module
+```
+rmmod module_name
+```
+
+
+---
+
+### Lỗi thường gặp
+```
+$ dmesg
+module: x86/modules: Skipping invalid relocation target, existing value is nonzero for type 1, loc 00000000f2e333ea, val ffffffffc09f9000
+```
+=> Gỡ & cài lại linux headers
+```sh
+sudo apt update && sudo apt upgrade
+sudo apt remove --purge linux-headers-*
+sudo apt autoremove && sudo apt autoclean
+sudo apt install linux-headers-`uname -r`
+```
+
 
 # Demo
 
@@ -56,3 +138,8 @@ sudo apt install flex bison
 - https://github.com/wangm8/Netfilter-Kernel-Module
 - https://github.com/konstantin89/linux-kernel-netfilter
 - https://medium.com/@GoldenOak/linux-kernel-communication-part-1-netfilter-hooks-15c07a5a5c4e
+- "Write a Linux firewall from scratch based on Netfilter" by ChrisBao
+	- https://organicprogrammer.com/2022/05/04/how-to-write-a-netfilter-firewall-part1/
+	- https://organicprogrammer.com/2022/05/05/how-to-write-a-netfilter-firewall-part2/
+	- https://organicprogrammer.com/2022/06/08/how-to-write-a-netfilter-firewall-part3/
+- https://itsfoss.com/compile-linux-kernel/
